@@ -1,5 +1,4 @@
-Program: Ark
-Creator: Michael Puckett
+Ark - Flight Controller
 
 The program is flight controller for model rockets.
 As of today, October 8 2024, it is in the development phase.
