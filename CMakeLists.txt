@@ -18,7 +18,6 @@ endif()
 set(sdkVersion 2.0.0)
 set(toolchainVersion 13_2_Rel1)
 set(picotoolVersion 2.0.0)
-include(${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 # ====================================================================================
 set(PICO_BOARD adafruit_itsybitsy_rp2040 CACHE STRING "Board type")
 
