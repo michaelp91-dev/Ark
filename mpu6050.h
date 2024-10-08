@@ -32,6 +32,12 @@ typedef struct MPU6050_DATA {
     float theta_roll, theta_pitch, theta_yaw;      // theta angle
 }MPU6050_DATA;
 
+typedef struct MPU6050
+{
+    struct MPU6050_STATE mpu6050_state;
+    struct MPU6050_DATA mpu6050_data;
+}MPU6050;
+
 typedef struct MPU6050_SELFTEST
 {
     uint8_t STR_X, STR_Y, STR_Z;            //STR => SELFT-TEST-RESPONSE
