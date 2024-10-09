@@ -45,6 +45,30 @@ void i2c_write_reg(uint8_t i2c_address, uint8_t reg, uint8_t data)
     i2c_write_blocking(i2c1, i2c_address, tab, sizeof(tab)/sizeof(tab[0]), false);
 }
 
+int16_t get_variance(int16_t* data, uint8_t data_size)
+{
+    int16_t variance = 0;
+    int32_t sum = 0;
+    int16_t mean = 0;
+    int16_t x[data_size];
+
+    for(uint8_t i = 0; i < data_size; i++)
+        sum += data[i];
+        
+    mean = sum / data_size;
+    sum = 0;
+
+    for(uint8_t i = 0; i < data_size; i++)
+        x[i] = data[i] - mean;
+
+    for(uint8_t i = 0; i < data_size; i++)
+        sum += pow(x[i], 2);
+    
+    variance = sum / data_size;
+
+    return variance;
+}
+
 // registers
 MPU6050_REG mpu6050_reg = {
     .address = 0x68,        //device address
@@ -182,7 +206,7 @@ void mpu_get_offset()
     int32_t accel_X_offset, accel_Y_offset, accel_Z_offset = 0;
     int32_t gyro_X_offset, gyro_Y_offset, gyro_Z_offset = 0;
     
-    for(uint8_t i = 0; i < 120; i++) // make 200 meaesurements and get average
+    for(uint8_t i = 0; i < 200; i++) // make 200 meaesurements and get average
     {
         mpu_read_raw(mpu6050);
         accel_X_offset += accel_raw[0];
@@ -193,11 +217,11 @@ void mpu_get_offset()
         gyro_Y_offset += gyro_raw[1];
         gyro_Z_offset += gyro_raw[2];
 
-        sleep_ms(1000); // wait for next measurement from mpu
+        sleep_ms(20); // wait for next measurement from mpu
     }
 
-    accel_X_offset /= 120; accel_Y_offset /= 120; accel_Z_offset /= 120;
-    gyro_X_offset /= 120; gyro_Y_offset /= 120; gyro_Z_offset /= 120;
+    accel_X_offset /= 200; accel_Y_offset /= 200; accel_Z_offset /= 200;
+    gyro_X_offset /= 200; gyro_Y_offset /= 200; gyro_Z_offset /= 200;
 
     accel_x_offset = accel_X_offset; 
     accel_y_offset = accel_Y_offset;
@@ -206,6 +230,53 @@ void mpu_get_offset()
     gyro_x_offset = gyro_X_offset;
     gyro_y_offset = gyro_Y_offset;
     gyro_z_offset = gyro_Z_offset;
+}
+
+void mpu_get_statistic()
+{
+    int16_t acc_x[200], acc_y[200], acc_z[200];
+    int16_t gyro_x[200], gyro_y[200], gyro_z[200];
+    int16_t var_acc_x, var_acc_y, var_acc_z, var_gyro_x, var_gyro_y, var_gyro_z;
+
+
+    for(uint8_t i; i < 200; i++) // measure output 50 times
+    {
+        mpu_read(mpu6050);
+        acc_x[i] = accel_no_offset[0];  
+        acc_y[i] = accel_no_offset[1]; 
+        acc_z[i] = accel_no_offset[2];
+        gyro_x[i] = gyro_no_offset[0];  
+        gyro_y[i] = gyro_no_offset[1];  
+        gyro_z[i] = gyro_no_offset[2];
+        sleep_ms(20); // wait fornext measurement
+    }
+
+    var_acc_x = get_variance(acc_x, 200); var_acc_y = get_variance(acc_y, 200); var_acc_z = get_variance(acc_z, 200);
+    var_gyro_x = get_variance(gyro_x, 200); var_gyro_y= get_variance(gyro_y, 200); var_gyro_z = get_variance(gyro_z, 200);
+
+    accel_x_deviation = var_acc_x; 
+    accel_y_deviation = var_acc_y; 
+    accel_z_deviation = var_acc_z; 
+    gyro_x_deviation = var_gyro_x; 
+    gyro_y_deviation = var_gyro_y; 
+    gyro_z_deviation = var_gyro_z;
+}
+
+void mpu_read()
+{
+    mpu_read_raw();
+
+    accel_no_offset[0] = accel_raw[0] - accel_x_offset;
+    accel_no_offset[1] = accel_raw[1] - accel_y_offset;
+    accel_no_offset[2] = accel_raw[2] - accel_z_offset; 
+
+    gyro_no_offset[0] = gyro_raw[0] - gyro_x_offset;
+    gyro_no_offset[1] = gyro_raw[1] - gyro_y_offset;
+    gyro_no_offset[2] = gyro_raw[2] - gyro_z_offset;    
+    
+    mpu_convert(mpu6050); 
+    mpu_remove_gravity(mpu6050);
+    mpu_get_theta(mpu6050);
 }
 
 static void mpu6050_read_raw() {
