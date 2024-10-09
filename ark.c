@@ -18,7 +18,7 @@ void i2c_write_reg(uint8_t i2c_address, uint8_t reg, uint8_t data)
 }
 
 // registers
-MPU6050_REG mpu_reg = {
+MPU6050_REG mpu6050_reg = {
     .address = 0x68,        //device address
     .who_i_am_add = 0x75,
     .reset_add = 0x6B,      //reset address
