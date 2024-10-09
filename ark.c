@@ -22,6 +22,13 @@ const float RAD_2_DEG = 57.29578; // [deg/rad]
 const float TEMP_LSB_2_DEGREE = 340.0; // [bit/celsius]
 const float TEMP_LSB_OFFSET = 12412.0;
 float gyro_lsb_to_degsec, acc_lsb_to_g;
+float gyro_x_offset, gyro_y_offset, gyro_z_offset;
+float accel_x_offset, accel_y_offset, accel_z_offset;
+float temp, accX, accY, accZ, gyroX, gyroY, gyroZ;
+float angleAccX, angleAccY;
+float angleX, angleY, angleZ;
+uint64_t Told;
+float filterGyroCoef;
 
 //data
 int16_t gyro_raw[3];
