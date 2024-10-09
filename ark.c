@@ -79,12 +79,9 @@ int main()
     mpu6050_reset();
 
     //mpu
-    MPU6050 mpu;
+    MPU6050 mpu6050;
     
     while (1) {
-        mpu6050_read_raw(accel_raw, gyro_raw, temp_raw);
-;
-
         sleep_ms(100);
     }
 }
