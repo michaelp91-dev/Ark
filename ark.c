@@ -116,7 +116,12 @@ int main()
     uint8_t STR_X, STR_Y, STR_Z;            //STR => SELFT-TEST-RESPONSE
     float FT_X, FT_Y, FT_Z;                 //FT => FACTORY TRIMMER
     uint8_t X_TEST, Y_TEST, Z_TEST, A_TEST; // TEST REGISTER
-    float X_ERROR, Y_ERROR, Z_ERROR;        //Errors given in %
+    float X_ERROR, Y_ERROR, Z_ERROR;  //Errors given in %
+
+    mpu_set_sample_rate(1);
+    mpu_setresolution(0, 0, mpu6050);
+    mpu_get_offset(mpu6050);
+    mpu_get_statistic(mpu6050);
     
     while (1) {
         sleep_ms(100);
