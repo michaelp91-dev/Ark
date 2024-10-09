@@ -1,7 +1,7 @@
 #ifndef _mpu6050_
 #define _mpu6050_
 
-typedef struct MPU6050_STATE {
+typedef struct STATE {
     uint8_t accel_res; uint16_t accel_res_val;                      // 0=> 16384, 1=>8192, 2=>4096, 3=>2048  
     uint8_t gyro_res;                                               // 0=> 131,   1=>65.5, 2=>32.8, 3=>16.4 
 
@@ -10,9 +10,9 @@ typedef struct MPU6050_STATE {
 
     int16_t accel_x_offset, accel_y_offset, accel_z_offset;         // accelerometer offset
     int16_t gyro_x_offset, gyro_y_offset, gyro_z_offset;            // gyroscope offset
-}MPU6050_STATE;
+}STATE;
 
-typedef struct MPU6050_DATA {
+typedef struct DATA {
     int16_t accel_raw[3];               // RAW X - Y - Z Acceleration
     int16_t gyro_raw[3];                // RAW X - Y - Z Gyroscope Data
     int16_t temp_raw;                   // RAW Temperature
@@ -30,12 +30,12 @@ typedef struct MPU6050_DATA {
 
     float distance;                     // computed distance
     float theta_roll, theta_pitch, theta_yaw;      // theta angle
-}MPU6050_DATA;
+}DATA;
 
 typedef struct MPU6050
 {
-    struct MPU6050_STATE mpu6050_state;
-    struct MPU6050_DATA mpu6050_data;
+    struct STATE mpu_state;
+    struct DATA mpu_data;
 }MPU6050;
 
 typedef struct MPU6050_SELFTEST
