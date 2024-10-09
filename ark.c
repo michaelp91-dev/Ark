@@ -18,11 +18,28 @@ void i2c_write_reg(uint8_t i2c_address, uint8_t reg, uint8_t data)
 }
 
 // registers
-static int addr = 0x68;
-static int reset_addr = 0x6B;
-static int accel_addr = 0x3B;
-static int gyro_addr = 0x43;
-static int temp_addr = 0x41;
+MPU6050_REG mpu_reg = {
+    .address = 0x68,        //device address
+    .who_i_am_add = 0x75,
+    .reset_add = 0x6B,      //reset address
+    .accel_add = 0x3B,      //accelerator data address register
+    .gyro_add = 0x43,       //gryoscope data address register
+    .temp_add = 0x41,       //temperature data address register
+    .acc_config = 0x1C,     //accelerometer resolution config register and calibration
+    .gyro_config = 0x1B,    // gyroscope resolution config register and calibration
+    .gyro_res = 0x1B,       // gyroscope resolution config register and calibration
+    .XA_TEST = 0x0D,        //XA_TEST and XG_test register
+    .YA_TEST = 0x0E,        //YA_TEST and YG_test register
+    .ZA_TEST = 0x0F,        //ZA_TEST and ZG_test register
+    .A_TEST = 0x10,         //second accelerometer test register XA_TEST[1:0]
+    .config = 0x1A,         //gyroscope DLPF_CFG set register
+    .SMPLRT_DIV = 0x19,     //sample rate divider
+    .FIFO_EN = 0x23,        // fifo enable
+    .FIFO_COUNTER_H = 0x72, // fifo counter high[15 : 8]
+    .FIFO_COUNTER_L = 0x73, // fifo counter high[7 : 0]
+    .INT_ENABLE = 0x38,     //  interrupt register
+    .USER_CTRL = 0x6A       // user control
+};
 
 #ifdef i2c_default
 static void mpu6050_reset() {
