@@ -58,7 +58,7 @@ static void set_gyro_config(int config_num) {
     }
 }
 
-static void setAccConfig(int config_num) {
+static void set_accel_config(int config_num) {
     switch (config_num) {
     case 0: // range = +- 2 g
       acc_lsb_to_g = 16384.0;
