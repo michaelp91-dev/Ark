@@ -22,6 +22,11 @@ const float RAD_2_DEG = 57.29578; // [deg/rad]
 const float TEMP_LSB_2_DEGREE = 340.0; // [bit/celsius]
 const float TEMP_LSB_OFFSET = 12412.0;
 
+//helpers
+write_data(uint8_t reg, uint8_t data) {
+  uint8_t buf[] = {reg, data};
+  i2c_write_blocking(i2c, addr, buf, 2, false);
+
 #ifdef I2C_PORT
 static void mpu6050_reset() {
     // Two byte reset. First byte register, second byte data
@@ -31,6 +36,48 @@ static void mpu6050_reset() {
     sleep_ms(1000);
     printf("\r\nMPU6050 Setup Complete\r\n");
 } 
+
+static void set_gyro_config(int config_num) {
+    switch (config_num) {
+  case 0: // range = +- 250 deg/s
+    gyro_lsb_to_degsec = 131.0;
+    write_data(gyro_config, 0x00);
+    break;
+  case 1: // range = +- 500 deg/s
+    gyro_lsb_to_degsec = 65.5;
+    write_data(gyro_config, 0x08);
+    break;
+  case 2: // range = +- 1000 deg/s
+    gyro_lsb_to_degsec = 32.8;
+    write_data(gyro_config, 0x10);
+    break;
+  case 3: // range = +- 2000 deg/s
+    gyro_lsb_to_degsec = 16.4;
+    write_data(gyro_config, 0x18);
+    break;
+    }
+}
+
+static void setAccConfig(int config_num) {
+    switch (config_num) {
+    case 0: // range = +- 2 g
+      acc_lsb_to_g = 16384.0;
+      write_data(accel_config, 0x00);
+      break;
+    case 1: // range = +- 4 g
+      acc_lsb_to_g = 8192.0;
+      write_data(accel_config, 0x08);
+      break;
+    case 2: // range = +- 8 g
+      acc_lsb_to_g = 4096.0;
+      write_data(accel_config, 0x10);
+      break;
+    case 3: // range = +- 16 g
+      acc_lsb_to_g = 2048.0;
+      write_data(accel_config, 0x18);
+      break;
+      }
+}
 
 void mpu_calc_offset(bool is_calc_gyro, bool is_calc_acc)
 {
@@ -80,7 +127,7 @@ void mpu_read()
 static void mpu6050_read_raw() {
     uint8_t buffer[14]
     i2c_write_blocking(I2C_PORT, addr, accel_out, 1, true);
-    i2c_read_blocking(I2C_PORT, addr, buffer, len, false);
+    i2c_read_blocking(I2C_PORT, addr, buffer, 14, false);
 
     int16_t rawData[7]; // [ax,ay,az,temp,gx,gy,gz]
     for (int i = 0; i < 7; i++) {
@@ -102,10 +149,7 @@ int main()
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
     mpu6050_reset();
 
-    mpu_set_sample_rate(1);
-    mpu_setresolution(0, 0);
     mpu_calc_offset(true, true)
-    mpu_get_statistic(mpu6050);
     
     while (1) {
         sleep_ms(100);
