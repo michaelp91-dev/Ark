@@ -34,8 +34,8 @@ typedef struct DATA {
 
 typedef struct MPU6050
 {
-    struct STATE mpu_state;
-    struct DATA mpu_data;
+    struct STATE state;
+    struct DATA data;
 }MPU6050;
 
 typedef struct MPU6050_SELFTEST
