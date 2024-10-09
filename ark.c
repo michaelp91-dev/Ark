@@ -78,23 +78,8 @@ int main()
 
     mpu6050_reset();
 
-    //mpu state variables
-    uint8_t accel_res; uint16_t accel_res_val;                      // 0=> 16384, 1=>8192, 2=>4096, 3=>2048  
-    uint8_t gyro_res;                                               // 0=> 131,   1=>65.5, 2=>32.8, 3=>16.4 
-    int16_t accel_x_deviation, accel_y_deviation, accel_z_deviation;// accelerometer standard deviation
-    int16_t gyro_x_deviation, gyro_y_deviation, gyro_z_deviation;   // gyroscope standard deviation
-    int16_t accel_x_offset, accel_y_offset, accel_z_offset;         // accelerometer offset
-    int16_t gyro_x_offset, gyro_y_offset, gyro_z_offset; 
-
-    //mpu data variables
-    int16_t accel_raw[3];               // RAW X - Y - Z Acceleration
-    int16_t gyro_raw[3];                // RAW X - Y - Z Gyroscope Data
-    int16_t temp_raw;                   // RAW Temperature
-    int16_t accel_no_offset[3];
-    int16_t gyro_no_offset[3];
-    float accel_convert[3];             // converted acceleration measures
-    float gyro_convert[3];              // converted gyroscope measures 
-
+    //mpu
+    MPU6050 mpu;
     
     while (1) {
         mpu6050_read_raw(accel_raw, gyro_raw, temp_raw);
