@@ -150,7 +150,7 @@ void mpu_setresolution(uint8_t gy_res, uint8_t ac_res)
     accel_res_val = res_value;
 }
 
-void mpu_calc_offset()
+void mpu_calc_offset(bool is_calc_gyro, bool is_calc_acc)
 {
     int32_t accel_X_offset, accel_Y_offset, accel_Z_offset = 0;
     int32_t gyro_X_offset, gyro_Y_offset, gyro_Z_offset = 0;
@@ -169,21 +169,16 @@ void mpu_calc_offset()
 
         sleep_ms(1000); // wait for next measurement from mpu
     }
-
-    accel_X_offset /= CALC_TIME; 
-    accel_Y_offset /= CALC_TIME; 
-    accel_Z_offset /= CALC_TIME;
-    gyro_X_offset /= CALC_TIME; 
-    gyro_Y_offset /= CALC_TIME; 
-    gyro_Z_offset /= CALC_TIME;
-
-    accel_x_offset = accel_X_offset; 
-    accel_y_offset = accel_Y_offset;
-    accel_z_offset = accel_Z_offset;
-
-    gyro_x_offset = gyro_X_offset;
-    gyro_y_offset = gyro_Y_offset;
-    gyro_z_offset = gyro_Z_offset;
+    if(is_calc_acc) {
+        accel_x_offset = accel_X_offset / CALC_TIME; 
+        accel_y_offset = accel_Y_offset / CALC_TIME; 
+        accel_z_offset = accel_Z_offset / CALC_TIME;
+    }
+    if(is_gyro_calc) {
+        gyro_x_offset = gyro_X_offset / CALC_TIME; 
+        gyro_y_offset = gyro_Y_offset / CALC_TIME; 
+        gyro_z_offset = gyro_Z_offset / CALC_TIME;
+    }
 }
 
 void mpu_get_statistic()
@@ -272,7 +267,7 @@ int main()
 
     mpu_set_sample_rate(1);
     mpu_setresolution(0, 0);
-    mpu_get_offset(mpu6050);
+    mpu_calc_offset(true, true)
     mpu_get_statistic(mpu6050);
     
     while (1) {
