@@ -10,63 +10,12 @@
 #define I2C_SDA 2
 #define I2C_SCL 3
 
-//mpu state
-uint8_t accel_res; uint16_t accel_res_val;                      // 0=> 16384, 1=>8192, 2=>4096, 3=>2048  
-uint8_t gyro_res;                                               // 0=> 131,   1=>65.5, 2=>32.8, 3=>16.4 
-int16_t accel_x_deviation, accel_y_deviation, accel_z_deviation;// accelerometer standard deviation
-int16_t gyro_x_deviation, gyro_y_deviation, gyro_z_deviation;   // gyroscope standard deviation
-int16_t accel_x_offset, accel_y_offset, accel_z_offset;         // accelerometer offset
-int16_t gyro_x_offset, gyro_y_offset, gyro_z_offset;            // gyroscope offset
-
-//mpu data
-int16_t accel_raw[3];               // RAW X - Y - Z Acceleration
-int16_t gyro_raw[3];                // RAW X - Y - Z Gyroscope Data
-int16_t temp_raw;                   // RAW Temperature
-int16_t accel_no_offset[3];
-int16_t gyro_no_offset[3];
-float accel_mod_no_gravity;         // accelerometer vecotr module sqrt(X^2 + Y^2 + Z^2) without gravity constant
-uint16_t gyro_mod;                  // gyroscope vecotr module sqrt(X^2 + Y^2 + Z^2)
-float accel_convert[3];             // converted acceleration measures
-float gyro_convert[3];              // converted gyroscope measures 
-float accel_no_gravity[3];          //user's data without offset and gravity constant
-float distance;                     // computed distance
-float theta_roll, theta_pitch, theta_yaw;      // theta angle
-
-//mpu self test
-uint8_t STR_X, STR_Y, STR_Z;            //STR => SELFT-TEST-RESPONSE
-float FT_X, FT_Y, FT_Z;                 //FT => FACTORY TRIMMER
-uint8_t X_TEST, Y_TEST, Z_TEST, A_TEST; // TEST REGISTER
-float X_ERROR, Y_ERROR, Z_ERROR;  //Errors given in %
 
 // Helpers
 void i2c_write_reg(uint8_t i2c_address, uint8_t reg, uint8_t data)
 {
     uint8_t tab[] = {reg, data};
     i2c_write_blocking(i2c1, i2c_address, tab, sizeof(tab)/sizeof(tab[0]), false);
-}
-
-int16_t get_variance(int16_t* data, uint8_t data_size)
-{
-    int16_t variance = 0;
-    int32_t sum = 0;
-    int16_t mean = 0;
-    int16_t x[data_size];
-
-    for(uint8_t i = 0; i < data_size; i++)
-        sum += data[i];
-        
-    mean = sum / data_size;
-    sum = 0;
-
-    for(uint8_t i = 0; i < data_size; i++)
-        x[i] = data[i] - mean;
-
-    for(uint8_t i = 0; i < data_size; i++)
-        sum += pow(x[i], 2);
-    
-    variance = sum / data_size;
-
-    return variance;
 }
 
 // registers
@@ -201,12 +150,13 @@ void mpu_setresolution(uint8_t gy_res, uint8_t ac_res)
     accel_res_val = res_value;
 }
 
-void mpu_get_offset()
+void mpu_calc_offset()
 {
     int32_t accel_X_offset, accel_Y_offset, accel_Z_offset = 0;
     int32_t gyro_X_offset, gyro_Y_offset, gyro_Z_offset = 0;
+    uint8_t CALC_TIME = 120
     
-    for(uint8_t i = 0; i < 200; i++) // make 200 meaesurements and get average
+    for(uint8_t i = 0; i < CALC_TIME; i++) // make 200 meaesurements and get average
     {
         mpu_read_raw(mpu6050);
         accel_X_offset += accel_raw[0];
@@ -217,11 +167,15 @@ void mpu_get_offset()
         gyro_Y_offset += gyro_raw[1];
         gyro_Z_offset += gyro_raw[2];
 
-        sleep_ms(20); // wait for next measurement from mpu
+        sleep_ms(1000); // wait for next measurement from mpu
     }
 
-    accel_X_offset /= 200; accel_Y_offset /= 200; accel_Z_offset /= 200;
-    gyro_X_offset /= 200; gyro_Y_offset /= 200; gyro_Z_offset /= 200;
+    accel_X_offset /= CALC_TIME; 
+    accel_Y_offset /= CALC_TIME; 
+    accel_Z_offset /= CALC_TIME;
+    gyro_X_offset /= CALC_TIME; 
+    gyro_Y_offset /= CALC_TIME; 
+    gyro_Z_offset /= CALC_TIME;
 
     accel_x_offset = accel_X_offset; 
     accel_y_offset = accel_Y_offset;
