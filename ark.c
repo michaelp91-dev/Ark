@@ -18,6 +18,26 @@ int16_t gyro_x_deviation, gyro_y_deviation, gyro_z_deviation;   // gyroscope sta
 int16_t accel_x_offset, accel_y_offset, accel_z_offset;         // accelerometer offset
 int16_t gyro_x_offset, gyro_y_offset, gyro_z_offset;            // gyroscope offset
 
+//mpu data
+    int16_t accel_raw[3];               // RAW X - Y - Z Acceleration
+    int16_t gyro_raw[3];                // RAW X - Y - Z Gyroscope Data
+    int16_t temp_raw;                   // RAW Temperature
+    int16_t accel_no_offset[3];
+    int16_t gyro_no_offset[3];
+    float accel_mod_no_gravity;         // accelerometer vecotr module sqrt(X^2 + Y^2 + Z^2) without gravity constant
+    uint16_t gyro_mod;                  // gyroscope vecotr module sqrt(X^2 + Y^2 + Z^2)
+    float accel_convert[3];             // converted acceleration measures
+    float gyro_convert[3];              // converted gyroscope measures 
+    float accel_no_gravity[3];          //user's data without offset and gravity constant
+    float distance;                     // computed distance
+    float theta_roll, theta_pitch, theta_yaw;      // theta angle
+
+    //mpu self test
+    uint8_t STR_X, STR_Y, STR_Z;            //STR => SELFT-TEST-RESPONSE
+    float FT_X, FT_Y, FT_Z;                 //FT => FACTORY TRIMMER
+    uint8_t X_TEST, Y_TEST, Z_TEST, A_TEST; // TEST REGISTER
+    float X_ERROR, Y_ERROR, Z_ERROR;  //Errors given in %
+
 // Helpers
 void i2c_write_reg(uint8_t i2c_address, uint8_t reg, uint8_t data)
 {
@@ -157,6 +177,37 @@ void mpu_setresolution(uint8_t gy_res, uint8_t ac_res)
     accel_res_val = res_value;
 }
 
+void mpu_get_offset()
+{
+    int32_t accel_X_offset, accel_Y_offset, accel_Z_offset = 0;
+    int32_t gyro_X_offset, gyro_Y_offset, gyro_Z_offset = 0;
+    
+    for(uint8_t i = 0; i < 120; i++) // make 200 meaesurements and get average
+    {
+        mpu_read_raw(mpu6050);
+        accel_X_offset += accel_raw[0];
+        accel_Y_offset += accel_raw[1];
+        accel_Z_offset += accel_raw[2] - accel_res_val;
+
+        gyro_X_offset += gyro_raw[0];
+        gyro_Y_offset += gyro_raw[1];
+        gyro_Z_offset += gyro_raw[2];
+
+        sleep_ms(1000); // wait for next measurement from mpu
+    }
+
+    accel_X_offset /= 120; accel_Y_offset /= 120; accel_Z_offset /= 120;
+    gyro_X_offset /= 120; gyro_Y_offset /= 120; gyro_Z_offset /= 120;
+
+    accel_x_offset = accel_X_offset; 
+    accel_y_offset = accel_Y_offset;
+    accel_z_offset = accel_Z_offset;
+
+    gyro_x_offset = gyro_X_offset;
+    gyro_y_offset = gyro_Y_offset;
+    gyro_z_offset = gyro_Z_offset;
+}
+
 static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
     uint8_t buffer[6];
 
@@ -196,28 +247,8 @@ int main()
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
     mpu6050_reset();
 
-    //mpu data
-    int16_t accel_raw[3];               // RAW X - Y - Z Acceleration
-    int16_t gyro_raw[3];                // RAW X - Y - Z Gyroscope Data
-    int16_t temp_raw;                   // RAW Temperature
-    int16_t accel_no_offset[3];
-    int16_t gyro_no_offset[3];
-    float accel_mod_no_gravity;         // accelerometer vecotr module sqrt(X^2 + Y^2 + Z^2) without gravity constant
-    uint16_t gyro_mod;                  // gyroscope vecotr module sqrt(X^2 + Y^2 + Z^2)
-    float accel_convert[3];             // converted acceleration measures
-    float gyro_convert[3];              // converted gyroscope measures 
-    float accel_no_gravity[3];          //user's data without offset and gravity constant
-    float distance;                     // computed distance
-    float theta_roll, theta_pitch, theta_yaw;      // theta angle
-
-    //mpu self test
-    uint8_t STR_X, STR_Y, STR_Z;            //STR => SELFT-TEST-RESPONSE
-    float FT_X, FT_Y, FT_Z;                 //FT => FACTORY TRIMMER
-    uint8_t X_TEST, Y_TEST, Z_TEST, A_TEST; // TEST REGISTER
-    float X_ERROR, Y_ERROR, Z_ERROR;  //Errors given in %
-
     mpu_set_sample_rate(1);
-    mpu_setresolution(0, 0, mpu6050);
+    mpu_setresolution(0, 0);
     mpu_get_offset(mpu6050);
     mpu_get_statistic(mpu6050);
     
