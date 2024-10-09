@@ -81,22 +81,42 @@ static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
 int main()
 {
     stdio_init_all();
-
     // I2C Initialisation. Using it at 400Khz.
     i2c_init(i2c_default, 400*1000);
-    
     gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
     gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
     gpio_pull_up(I2C_SDA);
     gpio_pull_up(I2C_SCL);
-    // For more examples of I2C use see https://github.com/raspberrypi/pico-examples/tree/master/i2c
-
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
-
     mpu6050_reset();
 
-    //mpu
-    MPU6050 mpu6050;
+    //mpu state
+    uint8_t accel_res; uint16_t accel_res_val;                      // 0=> 16384, 1=>8192, 2=>4096, 3=>2048  
+    uint8_t gyro_res;                                               // 0=> 131,   1=>65.5, 2=>32.8, 3=>16.4 
+    int16_t accel_x_deviation, accel_y_deviation, accel_z_deviation;// accelerometer standard deviation
+    int16_t gyro_x_deviation, gyro_y_deviation, gyro_z_deviation;   // gyroscope standard deviation
+    int16_t accel_x_offset, accel_y_offset, accel_z_offset;         // accelerometer offset
+    int16_t gyro_x_offset, gyro_y_offset, gyro_z_offset;            // gyroscope offset
+
+    //mpu data
+    int16_t accel_raw[3];               // RAW X - Y - Z Acceleration
+    int16_t gyro_raw[3];                // RAW X - Y - Z Gyroscope Data
+    int16_t temp_raw;                   // RAW Temperature
+    int16_t accel_no_offset[3];
+    int16_t gyro_no_offset[3];
+    float accel_mod_no_gravity;         // accelerometer vecotr module sqrt(X^2 + Y^2 + Z^2) without gravity constant
+    uint16_t gyro_mod;                  // gyroscope vecotr module sqrt(X^2 + Y^2 + Z^2)
+    float accel_convert[3];             // converted acceleration measures
+    float gyro_convert[3];              // converted gyroscope measures 
+    float accel_no_gravity[3];          //user's data without offset and gravity constant
+    float distance;                     // computed distance
+    float theta_roll, theta_pitch, theta_yaw;      // theta angle
+
+    //mpu self test
+    uint8_t STR_X, STR_Y, STR_Z;            //STR => SELFT-TEST-RESPONSE
+    float FT_X, FT_Y, FT_Z;                 //FT => FACTORY TRIMMER
+    uint8_t X_TEST, Y_TEST, Z_TEST, A_TEST; // TEST REGISTER
+    float X_ERROR, Y_ERROR, Z_ERROR;        //Errors given in %
     
     while (1) {
         sleep_ms(100);
