@@ -22,6 +22,11 @@ const float RAD_2_DEG = 57.29578; // [deg/rad]
 const float TEMP_LSB_2_DEGREE = 340.0; // [bit/celsius]
 const float TEMP_LSB_OFFSET = 12412.0;
 
+//data
+int16_t gyro_raw[3];
+int16_t accel_raw[3];
+int16_t temp_raw;
+
 //helpers
 write_data(uint8_t reg, uint8_t data) {
   uint8_t buf[] = {reg, data};
@@ -134,6 +139,13 @@ static void mpu6050_read_raw() {
       rawData[i] = rawData8[2 * i] << 8;
       rawData[i] |= rawData8[2 * i + 1];
     }
+    accel_raw[0] = rawData[0];
+    accel_raw[1] = rawData[1];
+    accel_raw[2] = rawData[2];
+    temp_raw = rawData[3];
+    gyro_raw[0] = rawData[4];
+    gyro_raw[1] = rawData[5];
+    gyro_raw[2] = rawData[6];
 }
 #endif
 
