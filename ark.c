@@ -29,6 +29,8 @@ float angleAccX, angleAccY;
 float angleX, angleY, angleZ;
 uint64_t Told;
 float filterGyroCoef;
+uint8_t accel_res_val = 0;
+uint8_t gyro_res_val = 0;
 
 //data
 int16_t gyro_raw[3];
@@ -126,15 +128,31 @@ void mpu_calc_offset(bool is_calc_gyro, bool is_calc_acc)
 
 void mpu_read()
 {
-    mpu_read_raw();
+  uint8_t buffer[14]
+  i2c_write_blocking(I2C_PORT, addr, accel_out, 1, true);
+  i2c_read_blocking(I2C_PORT, addr, buffer, 14, false);
 
-    accel_no_offset[0] = accel_raw[0] - accel_x_offset;
-    accel_no_offset[1] = accel_raw[1] - accel_y_offset;
-    accel_no_offset[2] = accel_raw[2] - accel_z_offset; 
+  int16_t rawData[7]; // [ax,ay,az,temp,gx,gy,gz]
+  for (int i = 0; i < 7; i++) {
+      rawData[i] = rawData8[2 * i] << 8;
+      rawData[i] |= rawData8[2 * i + 1];
+  }
+  accel_raw[0] = rawData[0];
+  accel_raw[1] = rawData[1];
+  accel_raw[2] = rawData[2];
+  temp_raw = rawData[3];
+  gyro_raw[0] = rawData[4];
+  gyro_raw[1] = rawData[5];
+  gyro_raw[2] = rawData[6];
 
-    gyro_no_offset[0] = gyro_raw[0] - gyro_x_offset;
-    gyro_no_offset[1] = gyro_raw[1] - gyro_y_offset;
-    gyro_no_offset[2] = gyro_raw[2] - gyro_z_offset;    
+  //
+  accX = ((float)rawData[0]) / acc_lsb_to_g - accXoffset;
+  accY = ((float)rawData[1]) / acc_lsb_to_g - accYoffset;
+  accZ = ((float)rawData[2]) / acc_lsb_to_g - accZoffset;
+  temp = (rawData[3] + TEMP_LSB_OFFSET) / TEMP_LSB_2_DEGREE;
+  gyroX = ((float)rawData[4]) / gyro_lsb_to_degsec - gyroXoffset;
+  gyroY = ((float)rawData[5]) / gyro_lsb_to_degsec - gyroYoffset;
+  gyroZ = ((float)rawData[6]) / gyro_lsb_to_degsec - gyroZoffset;    
 }
 
 static void mpu6050_read_raw() {
